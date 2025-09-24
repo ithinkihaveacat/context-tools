@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -e
+
+mkdir -p build/rpi-doc
+
+require() {
+    hash "$@" || { echo "Error: Command '$1' not found." >&2; exit 127; }
+}
+
+require curl
+require unzip
+require repomix
+
+URL="https://github.com/raspberrypi/documentation/archive/refs/heads/develop.zip"
+ZIP_FILE="build/rpi-doc/develop.zip"
+EXTRACT_DIR="build/rpi-doc"
+DOCS_DIR="$EXTRACT_DIR/documentation-develop"
+OUTPUT_FILE="build/rpi.txt"
+
+echo "Downloading Raspberry Pi documentation..."
+curl -sSL -o "$ZIP_FILE" "$URL"
+
+echo "Extracting documentation..."
+unzip -o -q "$ZIP_FILE" "documentation-develop/**/*.adoc" -d "$EXTRACT_DIR"
+
+echo "Running repomix on .adoc files..."
+repomix "$DOCS_DIR" --include="**/*.adoc" --no-security-check --quiet -o "$OUTPUT_FILE"
+
+echo "Successfully created $OUTPUT_FILE"
