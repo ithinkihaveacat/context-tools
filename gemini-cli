@@ -17,14 +17,21 @@ ZIP_FILE="build/gemini-cli-doc/main.zip"
 EXTRACT_DIR="build/gemini-cli-doc"
 DOCS_DIR="$EXTRACT_DIR/gemini-cli-main"
 OUTPUT_FILE="build/gemini-cli.txt"
+EXTENSIONS_OUTPUT_FILE="build/gemini-cli-extensions.txt"
 
 echo "Downloading Gemini CLI documentation..."
 curl -sSL -o "$ZIP_FILE" "$URL"
 
 echo "Extracting documentation..."
-unzip -o -q "$ZIP_FILE" "gemini-cli-main/docs/**/*.md" -d "$EXTRACT_DIR"
+rm -rf "$DOCS_DIR"
+unzip -o -q "$ZIP_FILE" -d "$EXTRACT_DIR"
 
 echo "Running repomix on .md files..."
 repomix "$DOCS_DIR" --include="docs/**/*.md" --no-security-check --quiet -o "$OUTPUT_FILE"
-
 echo "Successfully created $OUTPUT_FILE"
+
+repomix "$DOCS_DIR" \
+    --include="docs/*extension*.md" \
+    --include="docs/**/*extension*.md" \
+    --no-security-check --quiet -o "$EXTENSIONS_OUTPUT_FILE"
+echo "Successfully created $EXTENSIONS_OUTPUT_FILE"
