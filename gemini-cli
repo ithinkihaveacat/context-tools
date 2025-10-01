@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -e
+
+mkdir -p build/gemini-cli-doc
+
+require() {
+    hash "$@" || { echo "Error: Command '$1' not found." >&2; exit 127; }
+}
+
+require curl
+require unzip
+require repomix
+
+URL="https://github.com/google-gemini/gemini-cli/archive/refs/heads/main.zip"
+ZIP_FILE="build/gemini-cli-doc/main.zip"
+EXTRACT_DIR="build/gemini-cli-doc"
+DOCS_DIR="$EXTRACT_DIR/gemini-cli-main"
+OUTPUT_FILE="build/gemini-cli.txt"
+
+echo "Downloading Gemini CLI documentation..."
+curl -sSL -o "$ZIP_FILE" "$URL"
+
+echo "Extracting documentation..."
+unzip -o -q "$ZIP_FILE" "gemini-cli-main/docs/**/*.md" -d "$EXTRACT_DIR"
+
+echo "Running repomix on .md files..."
+repomix "$DOCS_DIR" --include="docs/**/*.md" --no-security-check --quiet -o "$OUTPUT_FILE"
+
+echo "Successfully created $OUTPUT_FILE"
