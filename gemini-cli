@@ -31,7 +31,6 @@ repomix "$DOCS_DIR" --include="docs/**/*.md" --no-security-check --quiet -o "$OU
 echo "Successfully created $OUTPUT_FILE"
 
 repomix "$DOCS_DIR" \
-    --include="docs/*extension*.md" \
-    --include="docs/**/*extension*.md" \
+    --include="docs/extensions/*.md" \
     --no-security-check --quiet -o "$EXTENSIONS_OUTPUT_FILE"
 echo "Successfully created $EXTENSIONS_OUTPUT_FILE"
