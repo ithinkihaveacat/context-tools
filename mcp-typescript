@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+set -e
+
+mkdir -p build/mcp-typescript-doc
+
+require() {
+    hash "$@" || { echo "Error: Command '$1' not found." >&2; exit 127; }
+}
+
+require curl
+require unzip
+require repomix
+
+URL="https://github.com/modelcontextprotocol/typescript-sdk/archive/refs/heads/main.zip"
+ZIP_FILE="build/mcp-typescript-doc/main.zip"
+EXTRACT_DIR="build/mcp-typescript-doc"
+DOCS_DIR="$EXTRACT_DIR/typescript-sdk-main"
+OUTPUT_FILE="build/mcp-typescript.txt"
+
+echo "Downloading MCP TypeScript SDK documentation..."
+curl -sSL -o "$ZIP_FILE" "$URL"
+
+echo "Extracting documentation..."
+unzip -o -q "$ZIP_FILE" "typescript-sdk-main/README.md" -d "$EXTRACT_DIR"
+
+echo "Running repomix on .md files..."
+repomix "$DOCS_DIR" --include="README.md" --no-security-check --quiet -o "$OUTPUT_FILE"
+
+echo "Successfully created $OUTPUT_FILE"
