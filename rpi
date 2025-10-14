@@ -17,7 +17,7 @@ ZIP_FILE="build/rpi-doc/develop.zip"
 EXTRACT_DIR="build/rpi-doc"
 DOCS_DIR="$EXTRACT_DIR/documentation-develop"
 DATE=$(date +%Y%m%d)
-OUTPUT_FILE="build/rpi-$DATE.txt"
+OUTPUT_FILE="context/rpi-$DATE.txt"
 
 echo "Downloading Raspberry Pi documentation..."
 curl -sSL -o "$ZIP_FILE" "$URL"
