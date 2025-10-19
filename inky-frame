@@ -2,19 +2,23 @@
 
 set -e
 
+# Main output directory for repomix
+MIX_DIR="build/inky-frame-mix"
+
 # Inky Frame repo
-mkdir -p build/inky-frame-doc
 URL_INKY="https://github.com/pimoroni/inky-frame/archive/refs/heads/main.zip"
 ZIP_FILE_INKY="build/inky-frame-doc/main.zip"
 EXTRACT_DIR_INKY="build/inky-frame-doc"
 DOCS_DIR_INKY="$EXTRACT_DIR_INKY/inky-frame-main"
 
 # Pimoroni Pico repo
-mkdir -p build/pico-doc
 URL_PICO="https://github.com/pimoroni/pimoroni-pico/archive/refs/heads/main.zip"
 ZIP_FILE_PICO="build/pico-doc/main.zip"
 EXTRACT_DIR_PICO="build/pico-doc"
 DOCS_DIR_PICO="$EXTRACT_DIR_PICO/pimoroni-pico-main"
+
+# mpremote documentation
+URL_MPREMOTE="https://docs.micropython.org/en/latest/_sources/reference/mpremote.rst.txt"
 
 OUTPUT_FILE="context/inky-frame.txt"
 
@@ -26,39 +30,40 @@ require curl
 require unzip
 require repomix
 require cp
+require rm
 
+# Clean and create directories
+mkdir -p build/inky-frame-doc build/pico-doc "$MIX_DIR"
+rm -rf "$MIX_DIR"/*
+
+# --- Source 1: Inky Frame ---
 echo "Downloading Inky Frame repository..."
 curl -sSL -o "$ZIP_FILE_INKY" "$URL_INKY"
-
 echo "Extracting Inky Frame repository..."
 rm -rf "$DOCS_DIR_INKY"
 unzip -o -q "$ZIP_FILE_INKY" -d "$EXTRACT_DIR_INKY"
+echo "Copying Inky Frame source to mix directory..."
+mkdir -p "$MIX_DIR/inky-frame"
+cp -R "$DOCS_DIR_INKY/docs" "$MIX_DIR/inky-frame/"
+cp -R "$DOCS_DIR_INKY/examples" "$MIX_DIR/inky-frame/"
+cp -R "$DOCS_DIR_INKY/modules" "$MIX_DIR/inky-frame/"
 
+# --- Source 2: Pimoroni Pico (picographics) ---
 echo "Downloading Pimoroni Pico repository..."
 curl -sSL -o "$ZIP_FILE_PICO" "$URL_PICO"
-
 echo "Extracting Pimoroni Pico repository..."
 rm -rf "$DOCS_DIR_PICO"
 unzip -o -q "$ZIP_FILE_PICO" -d "$EXTRACT_DIR_PICO"
+echo "Copying picographics module to mix directory..."
+mkdir -p "$MIX_DIR/pico"
+cp -R "$DOCS_DIR_PICO/micropython/modules/picographics" "$MIX_DIR/pico/"
 
-echo "Copying picographics module..."
-# Source path for the picographics module
-PICO_GRAPHICS_SRC="$DOCS_DIR_PICO/micropython/modules/picographics"
-# Destination path in the Inky Frame structure
-INKY_MODULES_DEST="$DOCS_DIR_INKY/modules"
-# Ensure the destination directory exists
-mkdir -p "$INKY_MODULES_DEST"
-# Copy the directory
-cp -R "$PICO_GRAPHICS_SRC" "$INKY_MODULES_DEST/"
-
-# mpremote documentation
-URL_MPREMOTE="https://docs.micropython.org/en/latest/_sources/reference/mpremote.rst.txt"
-MPREMOTE_DEST_DIR="$DOCS_DIR_INKY/docs"
-
+# --- Source 3: mpremote docs ---
 echo "Downloading mpremote documentation..."
-mkdir -p "$MPREMOTE_DEST_DIR"
-curl -sSL -o "$MPREMOTE_DEST_DIR/mpremote.rst.txt" "$URL_MPREMOTE"
+mkdir -p "$MIX_DIR/mpremote"
+curl -sSL -o "$MIX_DIR/mpremote/mpremote.rst.txt" "$URL_MPREMOTE"
 
-echo "Running repomix..."
-repomix "$DOCS_DIR_INKY" --include="docs/**,examples/**,modules/**" --no-security-check --quiet -o "$OUTPUT_FILE"
+# --- Run repomix ---
+echo "Running repomix on all sources..."
+repomix "$MIX_DIR" --include="**" --no-security-check --quiet -o "$OUTPUT_FILE"
 echo "Successfully created $OUTPUT_FILE"
