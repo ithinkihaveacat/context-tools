@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Inky Frame repo
+mkdir -p build/inky-frame-doc
+URL_INKY="https://github.com/pimoroni/inky-frame/archive/refs/heads/main.zip"
+ZIP_FILE_INKY="build/inky-frame-doc/main.zip"
+EXTRACT_DIR_INKY="build/inky-frame-doc"
+DOCS_DIR_INKY="$EXTRACT_DIR_INKY/inky-frame-main"
+
+# Pimoroni Pico repo
+mkdir -p build/pico-doc
+URL_PICO="https://github.com/pimoroni/pimoroni-pico/archive/refs/heads/main.zip"
+ZIP_FILE_PICO="build/pico-doc/main.zip"
+EXTRACT_DIR_PICO="build/pico-doc"
+DOCS_DIR_PICO="$EXTRACT_DIR_PICO/pimoroni-pico-main"
+
+OUTPUT_FILE="context/inky-frame.txt"
+
+require() {
+    hash "$@" || { echo "Error: Command '$1' not found." >&2; exit 127; }
+}
+
+require curl
+require unzip
+require repomix
+require cp
+
+echo "Downloading Inky Frame repository..."
+curl -sSL -o "$ZIP_FILE_INKY" "$URL_INKY"
+
+echo "Extracting Inky Frame repository..."
+rm -rf "$DOCS_DIR_INKY"
+unzip -o -q "$ZIP_FILE_INKY" -d "$EXTRACT_DIR_INKY"
+
+echo "Downloading Pimoroni Pico repository..."
+curl -sSL -o "$ZIP_FILE_PICO" "$URL_PICO"
+
+echo "Extracting Pimoroni Pico repository..."
+rm -rf "$DOCS_DIR_PICO"
+unzip -o -q "$ZIP_FILE_PICO" -d "$EXTRACT_DIR_PICO"
+
+echo "Copying picographics module..."
+# Source path for the picographics module
+PICO_GRAPHICS_SRC="$DOCS_DIR_PICO/micropython/modules/picographics"
+# Destination path in the Inky Frame structure
+INKY_MODULES_DEST="$DOCS_DIR_INKY/modules"
+# Ensure the destination directory exists
+mkdir -p "$INKY_MODULES_DEST"
+# Copy the directory
+cp -R "$PICO_GRAPHICS_SRC" "$INKY_MODULES_DEST/"
+
+# mpremote documentation
+URL_MPREMOTE="https://docs.micropython.org/en/latest/_sources/reference/mpremote.rst.txt"
+MPREMOTE_DEST_DIR="$DOCS_DIR_INKY/docs"
+
+echo "Downloading mpremote documentation..."
+mkdir -p "$MPREMOTE_DEST_DIR"
+curl -sSL -o "$MPREMOTE_DEST_DIR/mpremote.rst.txt" "$URL_MPREMOTE"
+
+echo "Running repomix..."
+repomix "$DOCS_DIR_INKY" --include="docs/**,examples/**,modules/**" --no-security-check --quiet -o "$OUTPUT_FILE"
+echo "Successfully created $OUTPUT_FILE"
