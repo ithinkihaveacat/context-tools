@@ -20,6 +20,9 @@ DOCS_DIR_PICO="$EXTRACT_DIR_PICO/pimoroni-pico-main"
 # mpremote documentation
 URL_MPREMOTE="https://docs.micropython.org/en/latest/_sources/reference/mpremote.rst.txt"
 
+# Pimoroni learning article
+URL_PIMORONI_LEARN="https://r.jina.ai/https://learn.pimoroni.com/article/getting-started-with-inky-frame"
+
 OUTPUT_FILE="context/inky-frame.txt"
 
 require() {
@@ -62,6 +65,11 @@ cp -R "$DOCS_DIR_PICO/micropython/modules/picographics" "$MIX_DIR/pico/"
 echo "Downloading mpremote documentation..."
 mkdir -p "$MIX_DIR/mpremote"
 curl -sSL -o "$MIX_DIR/mpremote/mpremote.rst.txt" "$URL_MPREMOTE"
+
+# --- Source 4: Pimoroni learning article ---
+echo "Downloading Pimoroni getting started article..."
+mkdir -p "$MIX_DIR/pimoroni-learn"
+curl -sSL -o "$MIX_DIR/pimoroni-learn/getting-started-with-inky-frame.md" "$URL_PIMORONI_LEARN"
 
 # --- Run repomix ---
 echo "Running repomix on all sources..."
