@@ -44,10 +44,10 @@ The scripts in the `bin/` directory download, process, and consolidate documenta
 
 ### Jetpack Documentation Scripts
 
-The Jetpack documentation generation is a two-step process:
+The Jetpack documentation generation is a two-step process, utilizing `bin/context-jetpack` internally to download sources to a temporary directory:
 
 ```bash
-./jetpack-selection.sh  # Download and extract Jetpack source code
+./jetpack-selection.sh  # Download and extract Jetpack source code using bin/context-jetpack
 ./jetpack-repomix.sh    # Consolidate the downloaded source code
 ```
 
@@ -66,7 +66,6 @@ All scripts are executable and will:
 - `context/mcp-typescript-sdk.txt` - MCP TypeScript SDK README
 - `context/rpi-YYYYMMDD.txt` - Raspberry Pi documentation (dated)
 - `context/inky-frame.txt` - Combined Inky Frame and picographics documentation
-- `context/<artifact>-<version>-<type>.txt` - Jetpack library documentation (e.g., `tiles-1.4.0-stable.txt`)
 
 ## Architecture
 
@@ -93,15 +92,18 @@ It creates a `build/inky-frame-mix/` directory to stage all sources before runni
 
 The `jetpack` scripts download source code for Android Jetpack libraries from Maven repositories. This is a multi-script process:
 
-1.  **`jetpack-selection.sh`**: Defines a list of Jetpack packages to download. For each package, it calls `jetpack-dl.sh` for both the "STABLE" and "LATEST" versions.
-2.  **`jetpack-dl.sh`**: A utility script that resolves the correct version string, downloads the `-sources.jar` file from the Maven repository, and extracts it into the `build/` directory.
-3.  **`jetpack-repomix.sh`**: Iterates through the downloaded sources in the `build/` directory and runs `repomix` on each one, generating a consolidated text file in `context/`.
+1.  **`jetpack-selection.sh`**: Defines a list of Jetpack packages to download. For each package, it calls `bin/context-jetpack` for both the "STABLE" and "LATEST" versions.
+2.  **`bin/context-jetpack`**: A utility script that resolves the correct version string, downloads the `-sources.jar` file from the Maven repository, extracts it into a temporary directory, and outputs the path to this temporary directory to stdout.
+3.  **`jetpack-repomix.sh`**: Iterates through the temporary directories created by `bin/context-jetpack` and runs `repomix` on each one, generating a consolidated text file in `context/`.
 
 ### Directory Structure
 
 ```
 .
 ├── bin/                # Scripts for generating documentation
+│   ├── context-jetpack       # Utility to download a Jetpack library
+│   ├── jetpack-repomix.sh  # Script to run repomix on downloaded libraries
+│   ├── jetpack-selection.sh # Script to select and download Jetpack libraries
 │   ├── repomix-gemini-cli
 │   ├── repomix-gemini-cli-extensions
 │   ├── repomix-inkyframe
@@ -109,9 +111,6 @@ The `jetpack` scripts download source code for Android Jetpack libraries from Ma
 │   ├── repomix-mcp-typescript-sdk
 │   └── repomix-rpi
 ├── context/            # Generated consolidated documentation files
-├── jetpack-dl.sh       # Utility to download a Jetpack library
-├── jetpack-repomix.sh  # Script to run repomix on downloaded libraries
-├── jetpack-selection.sh # Script to select and download Jetpack libraries
 ```
 
 ## Repomix Usage Patterns

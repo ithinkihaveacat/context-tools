@@ -3,21 +3,23 @@
 # Downloads and extracts the source code for a given Jetpack package.
 #
 # Usage:
-#   jetpack-dl.sh <artifact_type> <package_name> <version> [repo_url]
+#   context-jetpack <artifact_type> <package_name> <version> [repo_url]
 #
 # Example:
-#   jetpack-dl.sh tiles androidx.wear.tiles:tiles STABLE
-#   jetpack-dl.sh horologist com.google.android.horologist:horologist-datalayer STABLE https://repo1.maven.org/maven2
+#   context-jetpack tiles androidx.wear.tiles:tiles STABLE
+#   context-jetpack horologist com.google.android.horologist:horologist-datalayer STABLE https://repo1.maven.org/maven2
 #
 
 set -e
 
 if [ "$#" -ne 3 ] && [ "$#" -ne 4 ]; then
-  echo "Usage: jetpack-dl.sh <artifact_type> <package_name> <version> [repo_url]"
+  echo "Usage: context-jetpack <artifact_type> <package_name> <version> [repo_url]" >&2
   exit 1
 fi
 
-require() { hash "$@" || exit 127; }
+require() {
+    hash "$@" || { echo "Error: Command '$1' not found." >&2; exit 127; }
+}
 
 require curl
 require grep
@@ -27,10 +29,6 @@ require tr
 require sort
 require tail
 require jar
-
-# shellcheck disable=SC2181
-
-# https://maven.google.com/web/index.html
 
 get_stable_version() {
   local base_url="$1"
@@ -49,7 +47,6 @@ get_stable_version() {
     tail -n 1)
 
   if [[ -z "$release_version" ]]; then
-    # Fallback for cases where no stable version is found, take the latest prerelease.
     release_version=$(curl -sSL "$metadata_url" |
       xmllint --xpath "//version/text()" - |
       tr ' ' '\n' |
@@ -97,10 +94,10 @@ VERSION_STRING_UPPER=$(echo "$VERSION_STRING" | tr '[:lower:]' '[:upper:]')
 
 if [ "$VERSION_STRING_UPPER" == "STABLE" ]; then
   VERSION=$(get_stable_version "$REPO_URL" "$GROUP_ID" "$ARTIFACT_ID")
-  echo "Resolved STABLE version for ${PACKAGE_NAME} to ${VERSION}"
+  echo "info: Resolved STABLE version for ${PACKAGE_NAME} to ${VERSION}" >&2
 elif [ "$VERSION_STRING_UPPER" == "LATEST" ]; then
   VERSION=$(get_latest_version "$REPO_URL" "$GROUP_ID" "$ARTIFACT_ID")
-  echo "Resolved LATEST version for ${PACKAGE_NAME} to ${VERSION}"
+  echo "info: Resolved LATEST version for ${PACKAGE_NAME} to ${VERSION}" >&2
 else
   VERSION=$VERSION_STRING
 fi
@@ -109,13 +106,10 @@ GROUP_ID_PATH=$(echo "$GROUP_ID" | sed 's/\./\//g')
 SOURCE_JAR_URL="${REPO_URL}/${GROUP_ID_PATH}/${ARTIFACT_ID}/${VERSION}/${ARTIFACT_ID}-${VERSION}-sources.jar"
 SOURCE_JAR_FILENAME="${ARTIFACT_ID}-${VERSION}-sources.jar"
 
-BUILD_DIR="build/${ARTIFACT_TYPE}/${VERSION}"
-mkdir -p "${BUILD_DIR}"
+BUILD_DIR=$(mktemp -d)
 
-echo "Downloading sources from ${SOURCE_JAR_URL}"
 curl -sSL -o "${BUILD_DIR}/${SOURCE_JAR_FILENAME}" "${SOURCE_JAR_URL}"
 
-echo "Extracting sources to ${BUILD_DIR}"
 (
   cd "${BUILD_DIR}"
   jar xf "${SOURCE_JAR_FILENAME}"
@@ -123,4 +117,4 @@ echo "Extracting sources to ${BUILD_DIR}"
   rm -rf META-INF
 )
 
-echo "Successfully downloaded and extracted ${PACKAGE_NAME}:${VERSION}"
+echo "${BUILD_DIR}"
