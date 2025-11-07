@@ -1,8 +1,9 @@
-#!/usr/bin/env bash
+#!/usr//bin/env bash
 
 set -e
 
-mkdir -p build/rpi-doc
+BUILD_DIR=$(mktemp -d)
+trap 'rm -rf "$BUILD_DIR"' EXIT
 
 require() {
     hash "$@" || { echo "Error: Command '$1' not found." >&2; exit 127; }
@@ -13,22 +14,13 @@ require unzip
 require repomix
 
 URL="https://github.com/raspberrypi/documentation/archive/refs/heads/develop.zip"
-ZIP_FILE="build/rpi-doc/develop.zip"
-EXTRACT_DIR="build/rpi-doc"
+ZIP_FILE="$BUILD_DIR/develop.zip"
+EXTRACT_DIR="$BUILD_DIR"
 DOCS_DIR="$EXTRACT_DIR/documentation-develop"
-DATE=$(date +%Y%m%d)
-OUTPUT_FILE="context/rpi-$DATE.txt"
 
-echo "Downloading Raspberry Pi documentation..."
 curl -sSL -o "$ZIP_FILE" "$URL"
-
-echo "Extracting documentation..."
 unzip -o -q "$ZIP_FILE" "documentation-develop/**/*.adoc" -d "$EXTRACT_DIR"
-
-echo "Running repomix on .adoc files..."
 repomix "$DOCS_DIR" \
   --include="**/*.adoc" \
   --ignore="**/accessories/**,**/camera/**,**/compute-module/**,**/linux_kernel/**,**/processors/**,**/microcontrollers/**" \
-  --no-security-check --quiet -o "$OUTPUT_FILE"
-
-echo "Successfully created $OUTPUT_FILE"
+  --no-security-check --quiet -o -
