@@ -1,19 +1,20 @@
 #!/bin/bash
 #
-# Downloads and extracts the source code for a given Jetpack package.
+# Downloads and extracts the source code for one or more Jetpack packages.
 #
 # Usage:
-#   context-jetpack <artifact_type> <package_name> <version> [repo_url]
+#   context-jetpack <package_name>... <version> [repo_url]
 #
-# Example:
-#   context-jetpack tiles androidx.wear.tiles:tiles STABLE
-#   context-jetpack horologist com.google.android.horologist:horologist-datalayer STABLE https://repo1.maven.org/maven2
+# Examples:
+#   context-jetpack androidx.wear.tiles:tiles STABLE
+#   context-jetpack androidx.wear.protolayout:protolayout-{expression,material,material3} STABLE
+#   context-jetpack com.google.android.horologist:horologist-datalayer STABLE https://repo1.maven.org/maven2
 #
 
 set -e
 
-if [ "$#" -ne 3 ] && [ "$#" -ne 4 ]; then
-  echo "Usage: context-jetpack <artifact_type> <package_name> <version> [repo_url]" >&2
+if [ "$#" -lt 2 ]; then
+  echo "Usage: context-jetpack <package_name>... <version> [repo_url]" >&2
   exit 1
 fi
 
@@ -82,39 +83,55 @@ get_latest_version() {
   echo "$latest_version"
 }
 
-ARTIFACT_TYPE=$1
-PACKAGE_NAME=$2
-VERSION_STRING=$3
-REPO_URL=${4:-"https://dl.google.com/android/maven2"}
-
-GROUP_ID=$(echo "$PACKAGE_NAME" | cut -d: -f1)
-ARTIFACT_ID=$(echo "$PACKAGE_NAME" | cut -d: -f2)
+# Parse arguments: last arg might be repo_url, second-to-last (or last) is version
+if [[ "${!#}" =~ ^https?:// ]]; then
+  REPO_URL="${!#}"
+  VERSION_STRING="${@: -2:1}"
+  PACKAGES=("${@:1:$#-2}")
+else
+  REPO_URL="https://dl.google.com/android/maven2"
+  VERSION_STRING="${!#}"
+  PACKAGES=("${@:1:$#-1}")
+fi
 
 VERSION_STRING_UPPER=$(echo "$VERSION_STRING" | tr '[:lower:]' '[:upper:]')
 
-if [ "$VERSION_STRING_UPPER" == "STABLE" ]; then
-  VERSION=$(get_stable_version "$REPO_URL" "$GROUP_ID" "$ARTIFACT_ID")
-  echo "info: Resolved STABLE version for ${PACKAGE_NAME} to ${VERSION}" >&2
-elif [ "$VERSION_STRING_UPPER" == "LATEST" ]; then
-  VERSION=$(get_latest_version "$REPO_URL" "$GROUP_ID" "$ARTIFACT_ID")
-  echo "info: Resolved LATEST version for ${PACKAGE_NAME} to ${VERSION}" >&2
-else
-  VERSION=$VERSION_STRING
-fi
-
-GROUP_ID_PATH=$(echo "$GROUP_ID" | sed 's/\./\//g')
-SOURCE_JAR_URL="${REPO_URL}/${GROUP_ID_PATH}/${ARTIFACT_ID}/${VERSION}/${ARTIFACT_ID}-${VERSION}-sources.jar"
-SOURCE_JAR_FILENAME="${ARTIFACT_ID}-${VERSION}-sources.jar"
-
+# Create single temp directory for all packages
 BUILD_DIR=$(mktemp -d)
 
-curl -sSL -o "${BUILD_DIR}/${SOURCE_JAR_FILENAME}" "${SOURCE_JAR_URL}"
+# Download and extract each package
+for PACKAGE_NAME in "${PACKAGES[@]}"; do
+  GROUP_ID=$(echo "$PACKAGE_NAME" | cut -d: -f1)
+  ARTIFACT_ID=$(echo "$PACKAGE_NAME" | cut -d: -f2)
 
-(
-  cd "${BUILD_DIR}"
-  jar xf "${SOURCE_JAR_FILENAME}"
-  rm "${SOURCE_JAR_FILENAME}"
-  rm -rf META-INF
-)
+  # Resolve version (use the first package to resolve STABLE/LATEST)
+  if [ -z "$VERSION" ]; then
+    if [ "$VERSION_STRING_UPPER" == "STABLE" ]; then
+      VERSION=$(get_stable_version "$REPO_URL" "$GROUP_ID" "$ARTIFACT_ID")
+      echo "info: Resolved STABLE version for ${PACKAGE_NAME} to ${VERSION}" >&2
+    elif [ "$VERSION_STRING_UPPER" == "LATEST" ]; then
+      VERSION=$(get_latest_version "$REPO_URL" "$GROUP_ID" "$ARTIFACT_ID")
+      echo "info: Resolved LATEST version for ${PACKAGE_NAME} to ${VERSION}" >&2
+    else
+      VERSION=$VERSION_STRING
+    fi
+  fi
+
+  GROUP_ID_PATH=$(echo "$GROUP_ID" | sed 's/\./\//g')
+  SOURCE_JAR_URL="${REPO_URL}/${GROUP_ID_PATH}/${ARTIFACT_ID}/${VERSION}/${ARTIFACT_ID}-${VERSION}-sources.jar"
+  SOURCE_JAR_FILENAME="${ARTIFACT_ID}-${VERSION}-sources.jar"
+
+  echo "info: Downloading ${PACKAGE_NAME} version ${VERSION}" >&2
+  curl -sSL -o "${BUILD_DIR}/${SOURCE_JAR_FILENAME}" "${SOURCE_JAR_URL}"
+
+  (
+    cd "${BUILD_DIR}"
+    jar xf "${SOURCE_JAR_FILENAME}"
+    rm "${SOURCE_JAR_FILENAME}"
+  )
+done
+
+# Clean up META-INF after all extractions
+rm -rf "${BUILD_DIR}/META-INF"
 
 echo "${BUILD_DIR}"
