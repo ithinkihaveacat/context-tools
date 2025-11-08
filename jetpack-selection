@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Use context-jetpack from bin directory
+script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+context_jetpack="$script_dir/bin/context-jetpack"
+
+# Tiles - download all related packages together
+"$context_jetpack" androidx.wear.tiles:tiles{,-renderer,-testing} STABLE
+"$context_jetpack" androidx.wear.tiles:tiles{,-renderer,-testing} LATEST
+
+# Protolayout - download all related packages together
+"$context_jetpack" androidx.wear.protolayout:protolayout{,-expression,-material,-material3} STABLE
+"$context_jetpack" androidx.wear.protolayout:protolayout{,-expression,-material,-material3} LATEST
+
+# Compose
+"$context_jetpack" androidx.wear.compose:compose-material3 STABLE
+
+# Horologist
+"$context_jetpack" com.google.android.horologist:horologist-datalayer STABLE https://repo1.maven.org/maven2
+
+# Ongoing
+"$context_jetpack" androidx.wear:wear-ongoing STABLE
+
+echo "All packages downloaded."
