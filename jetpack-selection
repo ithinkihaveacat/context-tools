@@ -11,8 +11,21 @@ context_jetpack="$script_dir/bin/context-jetpack"
 "$context_jetpack" androidx.wear.tiles:tiles{,-renderer,-testing} LATEST
 
 # Protolayout - download all related packages together
-"$context_jetpack" androidx.wear.protolayout:protolayout{,-expression,-material,-material3} STABLE
+PROTO_STABLE_DIR=$("$context_jetpack" androidx.wear.protolayout:protolayout{,-expression,-material,-material3} STABLE)
 "$context_jetpack" androidx.wear.protolayout:protolayout{,-expression,-material,-material3} LATEST
+
+# Copy protolayout STABLE to persistent location
+CONTEXT_DIR="$HOME/.context"
+PROTO_CONTEXT_DIR="$CONTEXT_DIR/androidx-wear-protolayout"
+
+mkdir -p "$CONTEXT_DIR"
+if [ -d "$PROTO_CONTEXT_DIR" ]; then
+  rm -rf "$PROTO_CONTEXT_DIR"/*
+fi
+mkdir -p "$PROTO_CONTEXT_DIR"
+cp -r "$PROTO_STABLE_DIR"/* "$PROTO_CONTEXT_DIR/"
+
+echo "info: Copied protolayout STABLE to $PROTO_CONTEXT_DIR" >&2
 
 # Compose
 "$context_jetpack" androidx.wear.compose:compose-material3 STABLE
