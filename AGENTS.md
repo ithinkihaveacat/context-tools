@@ -13,8 +13,18 @@ All scripts require the following tools to be installed:
 - `unzip` - for extracting archives
 - `repomix` - for consolidating documentation into single files
 - `bash` - for script execution
-- `xmllint` - for parsing maven metadata
-- `jar` - for extracting sources
+- `xmllint` - for parsing maven metadata (Jetpack scripts only)
+- `jar` - for extracting JAR archives (Jetpack scripts only)
+
+For Jetpack scripts, add `bin/` to your PATH:
+```bash
+source setup-path.sh
+```
+
+This makes the following helper commands available:
+- `context-jetpack` - Download Jetpack packages
+- `jetpack-version-stable` - Get stable version for a package
+- `jetpack-version-latest` - Get latest version for a package
 
 ## Common Commands
 
@@ -44,19 +54,36 @@ The scripts in the `bin/` directory download, process, and consolidate documenta
 
 ### Jetpack Documentation Scripts
 
-The Jetpack documentation generation is a two-step process, utilizing `bin/context-jetpack` internally to download sources to a temporary directory:
+The Jetpack source code management uses a modular tooling approach:
 
 ```bash
-./jetpack-selection.sh  # Download and extract Jetpack source code using bin/context-jetpack
-./jetpack-repomix.sh    # Consolidate the downloaded source code
+# Set up PATH to use helper scripts
+source setup-path.sh
+
+# Download and extract Jetpack source code to ~/.context/ with versioned directories
+./jetpack-selection
+
+# Or use context-jetpack directly for custom packages
+context-jetpack androidx.wear.tiles:tiles STABLE
+context-jetpack androidx.wear.protolayout:protolayout{,-expression,-material,-material3} STABLE
+
+# Get version information
+jetpack-version-stable androidx.wear.compose:compose-material3
+jetpack-version-latest androidx.wear.tiles:tiles
 ```
 
-All scripts are executable and will:
+Documentation scripts are executable and will:
 1. Create a `build/` subdirectory for temporary files
 2. Download ZIP archives or files from GitHub/documentation sites
 3. Extract relevant files
 4. Run `repomix` to consolidate into a single text file
 5. Output the result to `context/`
+
+Jetpack scripts follow a different pattern:
+1. Download `-sources.jar` files from Maven repositories
+2. Extract source code to temporary directories
+3. Copy STABLE versions to versioned directories in `~/.context/`
+4. Provide persistent access to Jetpack source code
 
 ### Output Locations
 
@@ -90,27 +117,88 @@ It creates a `build/inky-frame-mix/` directory to stage all sources before runni
 
 ### Special Case: Jetpack Libraries
 
-The `jetpack` scripts download source code for Android Jetpack libraries from Maven repositories. This is a multi-script process:
+The Jetpack tooling downloads source code for Android Jetpack libraries from Maven repositories using a modular architecture:
 
-1.  **`jetpack-selection.sh`**: Defines a list of Jetpack packages to download. For each package, it calls `bin/context-jetpack` for both the "STABLE" and "LATEST" versions.
-2.  **`bin/context-jetpack`**: A utility script that resolves the correct version string, downloads the `-sources.jar` file from the Maven repository, extracts it into a temporary directory, and outputs the path to this temporary directory to stdout.
-3.  **`jetpack-repomix.sh`**: Iterates through the temporary directories created by `bin/context-jetpack` and runs `repomix` on each one, generating a consolidated text file in `context/`.
+1.  **`jetpack-selection`**: Main script that downloads multiple package groups (tiles, protolayout, compose, horologist, ongoing). For each group, it:
+    - Uses `jetpack-version-stable` to determine the stable version
+    - Calls `context-jetpack` to download both STABLE and LATEST versions
+    - Copies STABLE source to `~/.context/<group-name>-<version>/` for persistent access
+
+2.  **`bin/context-jetpack`**: Core utility that downloads one or more packages:
+    - Accepts multiple package names (supports brace expansion)
+    - Resolves STABLE/LATEST version keywords using helper scripts
+    - Downloads `-sources.jar` files from Maven repository
+    - Extracts all packages into a single temporary directory
+    - Outputs the temporary directory path to stdout
+
+3.  **`bin/jetpack-version-stable`**: Helper script that queries Maven metadata to find the stable version for a package
+
+4.  **`bin/jetpack-version-latest`**: Helper script that queries Maven metadata to find the latest version for a package
+
+All scripts use PATH to locate helpers, eliminating hardcoded script locations.
+
+#### Persistent Storage
+
+The `jetpack-selection` script creates versioned directories in `~/.context/`:
+- `~/.context/androidx-wear-tiles-1.5.0/`
+- `~/.context/androidx-wear-protolayout-1.3.0/`
+- `~/.context/androidx-wear-compose-1.5.5/`
+- `~/.context/com-google-android-horologist-0.7.15/`
+- `~/.context/androidx-wear-ongoing-1.1.0/`
+
+Each directory contains the complete source tree for all related packages in that group.
+
+#### Usage Examples
+
+Download a single package:
+```bash
+context-jetpack androidx.wear.tiles:tiles STABLE
+# Output: /tmp/tmp.xyz123 (temporary directory path)
+```
+
+Download multiple related packages using brace expansion:
+```bash
+context-jetpack androidx.wear.protolayout:protolayout{,-expression,-material,-material3} STABLE
+# Downloads all four packages into one temporary directory
+```
+
+Get version information:
+```bash
+jetpack-version-stable androidx.wear.compose:compose-material3
+# Output: 1.5.5
+
+jetpack-version-latest androidx.wear.tiles:tiles
+# Output: 1.6.0-alpha01
+```
+
+Download from a custom Maven repository:
+```bash
+context-jetpack com.google.android.horologist:horologist-datalayer STABLE https://repo1.maven.org/maven2
+```
 
 ### Directory Structure
 
 ```
 .
-├── bin/                # Scripts for generating documentation
-│   ├── context-jetpack       # Utility to download a Jetpack library
-│   ├── jetpack-repomix.sh  # Script to run repomix on downloaded libraries
-│   ├── jetpack-selection.sh # Script to select and download Jetpack libraries
+├── bin/                          # Scripts for generating documentation
+│   ├── context-jetpack           # Download Jetpack packages (supports multiple packages)
+│   ├── jetpack-version-stable    # Get stable version for a package
+│   ├── jetpack-version-latest    # Get latest version for a package
 │   ├── repomix-gemini-cli
 │   ├── repomix-gemini-cli-extensions
 │   ├── repomix-inkyframe
 │   ├── repomix-mcp-server
 │   ├── repomix-mcp-typescript-sdk
 │   └── repomix-rpi
-├── context/            # Generated consolidated documentation files
+├── jetpack-selection             # Download and store Jetpack sources to ~/.context/
+├── setup-path.sh                 # Add bin/ to PATH
+├── context/                      # Generated consolidated documentation files
+└── ~/.context/                   # Persistent Jetpack source storage (versioned)
+    ├── androidx-wear-tiles-1.5.0/
+    ├── androidx-wear-protolayout-1.3.0/
+    ├── androidx-wear-compose-1.5.5/
+    ├── com-google-android-horologist-0.7.15/
+    └── androidx-wear-ongoing-1.1.0/
 ```
 
 ## Repomix Usage Patterns
