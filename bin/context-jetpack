@@ -23,65 +23,9 @@ require() {
 }
 
 require curl
-require grep
-require sed
-require xmllint
-require tr
-require sort
-require tail
 require jar
-
-get_stable_version() {
-  local base_url="$1"
-  local group_id="$2"
-  local artifact_id="$3"
-  local group_id_path
-  group_id_path=$(echo "$group_id" | sed 's/\./\//g')
-  local metadata_url="$base_url/$group_id_path/$artifact_id/maven-metadata.xml"
-
-  local release_version
-  release_version=$(curl -sSL "$metadata_url" |
-    xmllint --xpath "//version/text()" - |
-    tr ' ' '\n' |
-    grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' |
-    sort -V |
-    tail -n 1)
-
-  if [[ -z "$release_version" ]]; then
-    release_version=$(curl -sSL "$metadata_url" |
-      xmllint --xpath "//version/text()" - |
-      tr ' ' '\n' |
-      sort -V |
-      tail -n 1)
-    if [[ -z "$release_version" ]]; then
-      echo "error: could not determine latest version for $group_id:$artifact_id from $metadata_url" >&2
-      exit 1
-    fi
-    echo "info: using latest prerelease version: $release_version" >&2
-  fi
-
-  echo "$release_version"
-}
-
-get_latest_version() {
-  local base_url="$1"
-  local group_id="$2"
-  local artifact_id="$3"
-  local group_id_path
-  group_id_path=$(echo "$group_id" | sed 's/\./\//g')
-  local metadata_url="$base_url/$group_id_path/$artifact_id/maven-metadata.xml"
-
-  local latest_version
-  latest_version=$(curl -sSL "$metadata_url" |
-    xmllint --xpath "//versioning/latest/text()" -)
-
-  if [[ -z "$latest_version" ]]; then
-    echo "error: could not determine latest version for $group_id:$artifact_id from $metadata_url" >&2
-    exit 1
-  fi
-
-  echo "$latest_version"
-}
+require jetpack-version-stable
+require jetpack-version-latest
 
 # Parse arguments: last arg might be repo_url, second-to-last (or last) is version
 if [[ "${!#}" =~ ^https?:// ]]; then
@@ -107,10 +51,10 @@ for PACKAGE_NAME in "${PACKAGES[@]}"; do
   # Resolve version (use the first package to resolve STABLE/LATEST)
   if [ -z "$VERSION" ]; then
     if [ "$VERSION_STRING_UPPER" == "STABLE" ]; then
-      VERSION=$(get_stable_version "$REPO_URL" "$GROUP_ID" "$ARTIFACT_ID")
+      VERSION=$(jetpack-version-stable "${PACKAGE_NAME}" "$REPO_URL")
       echo "info: Resolved STABLE version for ${PACKAGE_NAME} to ${VERSION}" >&2
     elif [ "$VERSION_STRING_UPPER" == "LATEST" ]; then
-      VERSION=$(get_latest_version "$REPO_URL" "$GROUP_ID" "$ARTIFACT_ID")
+      VERSION=$(jetpack-version-latest "${PACKAGE_NAME}" "$REPO_URL")
       echo "info: Resolved LATEST version for ${PACKAGE_NAME} to ${VERSION}" >&2
     else
       VERSION=$VERSION_STRING

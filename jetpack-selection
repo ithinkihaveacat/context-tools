@@ -2,37 +2,13 @@
 
 set -e
 
-# Use context-jetpack from bin directory
-script_dir=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-context_jetpack="$script_dir/bin/context-jetpack"
-
-# Helper function to get the stable version for a package
-get_stable_version() {
-  local package_name="$1"
-  local repo_url="${2:-https://dl.google.com/android/maven2}"
-  local group_id=$(echo "$package_name" | cut -d: -f1)
-  local artifact_id=$(echo "$package_name" | cut -d: -f2)
-  local group_id_path=$(echo "$group_id" | sed 's/\./\//g')
-  local metadata_url="$repo_url/$group_id_path/$artifact_id/maven-metadata.xml"
-
-  local version
-  version=$(curl -sSL "$metadata_url" | \
-    xmllint --xpath "//version/text()" - | \
-    tr ' ' '\n' | \
-    grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | \
-    sort -V | \
-    tail -n 1)
-
-  if [[ -z "$version" ]]; then
-    version=$(curl -sSL "$metadata_url" | \
-      xmllint --xpath "//version/text()" - | \
-      tr ' ' '\n' | \
-      sort -V | \
-      tail -n 1)
-  fi
-
-  echo "$version"
+# Check for required commands
+require() {
+    hash "$@" || { echo "Error: Command '$1' not found." >&2; exit 127; }
 }
+
+require context-jetpack
+require jetpack-version-stable
 
 # Helper function to copy source to persistent location
 copy_to_context() {
@@ -51,30 +27,30 @@ copy_to_context() {
 }
 
 # Tiles - download all related packages together
-TILES_VERSION=$(get_stable_version "androidx.wear.tiles:tiles")
-TILES_STABLE_DIR=$("$context_jetpack" androidx.wear.tiles:tiles{,-renderer,-testing} STABLE)
-"$context_jetpack" androidx.wear.tiles:tiles{,-renderer,-testing} LATEST
+TILES_VERSION=$(jetpack-version-stable "androidx.wear.tiles:tiles")
+TILES_STABLE_DIR=$(context-jetpack androidx.wear.tiles:tiles{,-renderer,-testing} STABLE)
+context-jetpack androidx.wear.tiles:tiles{,-renderer,-testing} LATEST
 copy_to_context "$TILES_STABLE_DIR" "androidx-wear-tiles-$TILES_VERSION"
 
 # Protolayout - download all related packages together
-PROTO_VERSION=$(get_stable_version "androidx.wear.protolayout:protolayout")
-PROTO_STABLE_DIR=$("$context_jetpack" androidx.wear.protolayout:protolayout{,-expression,-material,-material3} STABLE)
-"$context_jetpack" androidx.wear.protolayout:protolayout{,-expression,-material,-material3} LATEST
+PROTO_VERSION=$(jetpack-version-stable "androidx.wear.protolayout:protolayout")
+PROTO_STABLE_DIR=$(context-jetpack androidx.wear.protolayout:protolayout{,-expression,-material,-material3} STABLE)
+context-jetpack androidx.wear.protolayout:protolayout{,-expression,-material,-material3} LATEST
 copy_to_context "$PROTO_STABLE_DIR" "androidx-wear-protolayout-$PROTO_VERSION"
 
 # Compose
-COMPOSE_VERSION=$(get_stable_version "androidx.wear.compose:compose-material3")
-COMPOSE_STABLE_DIR=$("$context_jetpack" androidx.wear.compose:compose-material3 STABLE)
+COMPOSE_VERSION=$(jetpack-version-stable "androidx.wear.compose:compose-material3")
+COMPOSE_STABLE_DIR=$(context-jetpack androidx.wear.compose:compose-material3 STABLE)
 copy_to_context "$COMPOSE_STABLE_DIR" "androidx-wear-compose-$COMPOSE_VERSION"
 
 # Horologist
-HOROLOGIST_VERSION=$(get_stable_version "com.google.android.horologist:horologist-datalayer" "https://repo1.maven.org/maven2")
-HOROLOGIST_STABLE_DIR=$("$context_jetpack" com.google.android.horologist:horologist-datalayer STABLE https://repo1.maven.org/maven2)
+HOROLOGIST_VERSION=$(jetpack-version-stable "com.google.android.horologist:horologist-datalayer" "https://repo1.maven.org/maven2")
+HOROLOGIST_STABLE_DIR=$(context-jetpack com.google.android.horologist:horologist-datalayer STABLE https://repo1.maven.org/maven2)
 copy_to_context "$HOROLOGIST_STABLE_DIR" "com-google-android-horologist-$HOROLOGIST_VERSION"
 
 # Ongoing
-ONGOING_VERSION=$(get_stable_version "androidx.wear:wear-ongoing")
-ONGOING_STABLE_DIR=$("$context_jetpack" androidx.wear:wear-ongoing STABLE)
+ONGOING_VERSION=$(jetpack-version-stable "androidx.wear:wear-ongoing")
+ONGOING_STABLE_DIR=$(context-jetpack androidx.wear:wear-ongoing STABLE)
 copy_to_context "$ONGOING_STABLE_DIR" "androidx-wear-ongoing-$ONGOING_VERSION"
 
 echo "All packages downloaded."
