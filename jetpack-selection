@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Check for required commands
+require() {
+    hash "$@" || { echo "Error: Command '$1' not found." >&2; exit 127; }
+}
+
+require context-jetpack
+require jetpack-version-stable
+
+# Helper function to copy source to persistent location
+copy_to_context() {
+  local source_dir="$1"
+  local dir_name="$2"
+  local context_dir="$HOME/.context/$dir_name"
+
+  mkdir -p "$HOME/.context"
+  if [ -d "$context_dir" ]; then
+    rm -rf "$context_dir"/*
+  fi
+  mkdir -p "$context_dir"
+  cp -r "$source_dir"/* "$context_dir/"
+
+  echo "info: Copied to $context_dir" >&2
+}
+
+# Tiles - download all related packages together
+TILES_VERSION=$(jetpack-version-stable "androidx.wear.tiles:tiles")
+TILES_STABLE_DIR=$(context-jetpack androidx.wear.tiles:tiles{,-renderer,-testing} STABLE)
+context-jetpack androidx.wear.tiles:tiles{,-renderer,-testing} LATEST
+copy_to_context "$TILES_STABLE_DIR" "androidx-wear-tiles-$TILES_VERSION"
+
+# Protolayout - download all related packages together
+PROTO_VERSION=$(jetpack-version-stable "androidx.wear.protolayout:protolayout")
+PROTO_STABLE_DIR=$(context-jetpack androidx.wear.protolayout:protolayout{,-expression,-material,-material3} STABLE)
+context-jetpack androidx.wear.protolayout:protolayout{,-expression,-material,-material3} LATEST
+copy_to_context "$PROTO_STABLE_DIR" "androidx-wear-protolayout-$PROTO_VERSION"
+
+# Compose
+COMPOSE_VERSION=$(jetpack-version-stable "androidx.wear.compose:compose-material3")
+COMPOSE_STABLE_DIR=$(context-jetpack androidx.wear.compose:compose-material3 STABLE)
+copy_to_context "$COMPOSE_STABLE_DIR" "androidx-wear-compose-$COMPOSE_VERSION"
+
+# Horologist
+HOROLOGIST_VERSION=$(jetpack-version-stable "com.google.android.horologist:horologist-datalayer" "https://repo1.maven.org/maven2")
+HOROLOGIST_STABLE_DIR=$(context-jetpack com.google.android.horologist:horologist-datalayer STABLE https://repo1.maven.org/maven2)
+copy_to_context "$HOROLOGIST_STABLE_DIR" "com-google-android-horologist-$HOROLOGIST_VERSION"
+
+# Ongoing
+ONGOING_VERSION=$(jetpack-version-stable "androidx.wear:wear-ongoing")
+ONGOING_STABLE_DIR=$(context-jetpack androidx.wear:wear-ongoing STABLE)
+copy_to_context "$ONGOING_STABLE_DIR" "androidx-wear-ongoing-$ONGOING_VERSION"
+
+echo "All packages downloaded."
