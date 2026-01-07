@@ -9,12 +9,12 @@ dependency management policy.
 The primary goal is to ensure that all dependencies are explicitly declared and
 directly used. This means the project should satisfy the following conditions:
 
-1.  **No Unused Dependencies**: A dependency is listed in a `build.gradle.kts`
-    file _only if_ it is directly used by the source code (Kotlin, XML, etc.)
-    within that module.
-2.  **No Implicit Transitive Dependencies**: If the code uses a library that is
-    brought in as a transitive dependency of another library, it must be
-    explicitly declared as a direct dependency.
+1. **No Unused Dependencies**: A dependency is listed in a `build.gradle.kts`
+   file _only if_ it is directly used by the source code (Kotlin, XML, etc.)
+   within that module.
+2. **No Implicit Transitive Dependencies**: If the code uses a library that is
+   brought in as a transitive dependency of another library, it must be
+   explicitly declared as a direct dependency.
 
 This practice leads to a cleaner, more understandable, and more maintainable
 build configuration.
@@ -97,18 +97,20 @@ according to our objective.
 To ensure the plugin is active and correctly identifying issues, you can perform
 a quick sanity check:
 
-1.  **Introduce an unused dependency**: Add a known-unused library to any
-    module's `build.gradle.kts`.
-    ```kotlin
-    dependencies {
-        implementation("org.mockito:mockito-core:5.12.0") // A temporarily added, unused dependency
-        // ... other dependencies
-    }
-    ```
-2.  **Run the analyzer**: Execute `./gradlew buildHealth`.
-3.  **Check the report**: The `build-health-report.txt` file should now list the
-    Mockito dependency as unused.
-4.  **Revert the change**: Remove the temporary dependency.
+1. **Introduce an unused dependency**: Add a known-unused library to any
+   module's `build.gradle.kts`.
+
+   ```kotlin
+   dependencies {
+       implementation("org.mockito:mockito-core:5.12.0") // A temporarily added, unused dependency
+       // ... other dependencies
+   }
+   ```
+
+2. **Run the analyzer**: Execute `./gradlew buildHealth`.
+3. **Check the report**: The `build-health-report.txt` file should now list the
+   Mockito dependency as unused.
+4. **Revert the change**: Remove the temporary dependency.
 
 ### 3. Verifying Indirect Dependencies
 
@@ -119,16 +121,18 @@ detect indirect usage, such as dependencies used only in themes
 If you suspect a dependency reported as "used" is actually not, you can verify
 it with a build test:
 
-1.  **Temporarily remove the dependency** from the `build.gradle.kts` file.
-2.  **Run a clean build**:
-    ```bash
-    ./gradlew clean build
-    ```
-3.  **Observe the result**:
-    - If the **build fails**, it confirms the dependency is necessary, even if
-      for indirect reasons like a theme. You should restore the dependency.
-    - If the **build succeeds**, the dependency is likely unused and can be
-      safely removed.
+1. **Temporarily remove the dependency** from the `build.gradle.kts` file.
+2. **Run a clean build**:
+
+   ```bash
+   ./gradlew clean build
+   ```
+
+3. **Observe the result**:
+   - If the **build fails**, it confirms the dependency is necessary, even if
+     for indirect reasons like a theme. You should restore the dependency.
+   - If the **build succeeds**, the dependency is likely unused and can be
+     safely removed.
 
 This manual check serves as a final confirmation that all listed dependencies
 are truly required for the project to compile and run.
