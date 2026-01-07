@@ -159,8 +159,15 @@ Follow this sequence to ensure a clean capture:
 
 Inject a start marker before beginning the reproduction steps.
 
+**Critical:** Log buffers persist. To avoid confusing this run with previous
+attempts, clear the buffer first or use a unique message.
+
 ```bash
-adb exec-out log -p f -t "BugReportMarker" "START_REPRO: <Bug Description>"
+# Optional: Clear previous logs
+adb logcat -c
+
+# Mark start with a unique timestamp to distinguish from prior runs
+adb exec-out log -p f -t "BugReportMarker" "START_REPRO: <Bug Description> $(date +%H%M%S)"
 ```
 
 #### 2. Reproduce the Defect
@@ -226,7 +233,8 @@ standard `bugreport-*.txt`.
 # 1. Identify the log file within the ZIP
 LOG_FILE=$(unzip -qql "bugreport.zip" | cut -c 31- | grep -e dumpstate- -e dumpstate.txt -e bugreport- | grep txt)
 
-# 2. Extract and display only the marked "interesting" period
+# 2. Extract and display only the marked "interesting" period.
+# CAUTION: Check timestamps! If previous runs weren't cleared, multiple blocks may appear.
 unzip -p "bugreport.zip" "$LOG_FILE" | perl -ne 'print if /START_REPRO/ .. /END_REPRO/'
 ```
 
