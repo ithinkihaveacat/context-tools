@@ -151,6 +151,35 @@ adb exec-out log -p f -t "BugReportMarker" "$1"
 - `-t "BugReportMarker"`: Sets a consistent tag for easy filtering.
 - `"$1"`: The message content.
 
+### Optional: Continuous Background Logging
+
+In high-volume or long-running tests, the device's internal log buffer may
+rotate, causing earlier markers or error logs to be lost before `adb bugreport`
+is run. To mitigate this, capture logs continuously to a file on the host
+machine.
+
+#### Workflow
+
+1. **Start Logging in Background:** Clear the buffer, then stream logs to a
+   file, saving the process ID (PID).
+
+   ```bash
+   adb logcat -c && adb logcat > continuous_log.txt & LOGCAT_PID=$!
+   ```
+
+2. **Run Reproduction Steps:** Execute your test case, including injecting
+   `BugReportMarker` tags as usual.
+
+3. **Stop Logging:** Kill the background process once the test is complete.
+
+   ```bash
+   kill $LOGCAT_PID
+   ```
+
+4. **Verify & Attach:** Inspect `continuous_log.txt` to ensure the markers and
+   errors were captured. Attach this file to the bug report if the standard
+   `bugreport.zip` is missing the relevant data.
+
 ### Execution Workflow
 
 Follow this sequence to ensure a clean capture:
@@ -220,10 +249,20 @@ adb-screenshot repro.png
 
 ### Verifying the Captured Report
 
-To ensure the markers were successfully captured and to inspect the relevant log
-window without extracting the entire archive, you can use the following snippet.
-**This snippet is also what you should include in the "Error Log" section of
-your report.**
+**Crucial Step:** Before submitting, verify that your markers and the error
+itself are actually present in the capture.
+
+- **Check Timestamps:** Ensure the logs correspond to the time of your _latest_
+  run. Old logs from previous attempts can persist and mislead analysis.
+- **Verify Unique Tags:** If you used unique session IDs in your markers (e.g.,
+  `START_REPRO_12345`), confirm they match.
+- **Check for Rotation:** If your markers are missing, the log buffer likely
+  rotated. In this case, use the **Continuous Background Logging** technique
+  described above.
+
+To inspect the relevant log window without extracting the entire archive, you
+can use the following snippet. **This snippet is also what you should include in
+the "Error Log" section of your report.**
 
 Note that file naming conventions for the internal log vary by manufacturer; for
 instance, Samsung devices typically use `dumpstate-*.txt` instead of the
