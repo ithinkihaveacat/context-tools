@@ -23,6 +23,17 @@ provided. It should describe:
 **Do not include speculation** about root causes or internal mechanics here.
 Save that for the "Analysis" section.
 
+### Impact
+
+Briefly explain the implications of this defect to motivate the fix. Focus on
+factual outcomes rather than emotional appeals.
+
+- **Developer Experience:** Does this cause inconsistencies that reduce
+  development velocity? Does it render automated tooling unreliable or difficult
+  to maintain?
+- **User Experience:** Is there a tangible performance degradation or functional
+  blocker?
+
 ### Reproduction Statistics (Optional)
 
 If the bug is intermittent, provide statistics on how often it occurs (e.g., "5
