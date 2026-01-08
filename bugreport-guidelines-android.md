@@ -23,6 +23,14 @@ provided. It should describe:
 **Do not include speculation** about root causes or internal mechanics here.
 Save that for the "Analysis" section.
 
+### Environment
+
+Precise versioning allows for accurate reproduction and source code validation.
+
+- **Device:** Device model and API level (e.g., "Pixel Watch 2, API 33" or "Emulator, Wear OS 4").
+- **Build:** App version code or commit hash.
+- **Libraries:** Key library versions involved in the bug (e.g., `androidx.glance:glance-wear-tiles:1.0.0-alpha05`).
+
 ### Impact
 
 Briefly explain the implications of this defect to motivate the fix. Focus on
@@ -107,8 +115,7 @@ as the bug report document.
 
 - `bugreport.zip` (or similar): The captured Android bug report containing
   system logs.
-- `app-debug.apk`: The specific build of the application used to reproduce the
-  bug.
+- **APK**: A specific build of the application used to reproduce the bug (e.g., `app-debug.apk`).
 - **Code Fragments**: If a full APK or bug report isn't available, include
   relevant source code snippets.
 
