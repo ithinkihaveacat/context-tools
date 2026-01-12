@@ -20,12 +20,13 @@ The report must provide sufficient context to attempt a reproduction or code ana
     - **NO:** Does the "Environment" section explicitly list:
         - Device/Emulator info?
         - Android API level?
-        - Build version/Commit hash?
+        - Build version/Commit hash (or specific APK artifact)?
         - Critical library versions?
 - **Failure Condition:** If neither the zip nor the textual description is present, mark as **NEEDS INFO**.
 
 ### 2. Artifact & Command Verification
 If the report includes "Log Extraction Commands" or analysis scripts:
+- **Check:** Are all files mentioned in the "Attachments" section (especially APKs and log files) actually present in the repository or ZIP?
 - **Action:** Execute the provided commands against the attached artifacts.
 - **Validation Criteria:**
     - The command must run without syntax errors on a standard Unix-like environment.

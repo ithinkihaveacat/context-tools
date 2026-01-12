@@ -20,15 +20,19 @@ provided. It should describe:
 - The observable symptoms (e.g., crash, UI glitch).
 - The context in which it occurs.
 
-**Do not include speculation** about root causes or internal mechanics here.
-Save that for the "Analysis" section.
+**Strict Prohibition on Speculation:**
+- **Do not** use "because" clauses that explain the *why* (e.g., "Crashes because the variable is null").
+- **Do not** reference internal code logic, specific functions, or race conditions.
+- **Do not** propose fixes here.
+
+Save all technical reasoning and root cause analysis for the "Analysis" section.
 
 ### Environment
 
 Precise versioning allows for accurate reproduction and source code validation.
 
 - **Device:** Device model and API level (e.g., "Pixel Watch 2, API 33" or "Emulator, Wear OS 4").
-- **Build:** App version code or commit hash.
+- **Build:** App version code, commit hash, or the specific APK artifact name used (e.g., `app-debug.apk`).
 - **Libraries:** Key library versions involved in the bug (e.g., `androidx.glance:glance-wear-tiles:1.0.0-alpha05`).
 
 ### Impact
@@ -115,7 +119,7 @@ as the bug report document.
 
 - `bugreport.zip` (or similar): The captured Android bug report containing
   system logs.
-- **APK**: A specific build of the application used to reproduce the bug (e.g., `app-debug.apk`).
+- **APK**: The specific build artifact used to reproduce the bug. Explicitly listing the filename (e.g., `app/build/outputs/apk/debug/app-debug.apk`) ensures the exact binary is identified.
 - **Code Fragments**: If a full APK or bug report isn't available, include
   relevant source code snippets.
 
