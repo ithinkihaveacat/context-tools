@@ -22,6 +22,7 @@ Before creating files, research the following:
    requirements, directory structure, and naming conventions.
 
 2. **Examine relevant scripts in `bin/`**:
+
    - All `bin/adb-*` scripts (~40 scripts for device manipulation, screenshots,
      tiles, demo mode, key events, dumpsys, etc.)
    - All `bin/wearableservice-*` scripts (4 scripts for Wear OS data layer
@@ -30,6 +31,7 @@ Before creating files, research the following:
    - All `bin/apk-*` scripts (~16 scripts for APK analysis)
 
    For each script, understand:
+
    - Purpose and when to use it
    - The underlying `adb` commands
    - Dependencies (look for `require` lines)
@@ -38,7 +40,7 @@ Before creating files, research the following:
 
 Create this exact structure:
 
-```
+```text
 skills/android-adb-wear/
 ├── SKILL.md              # Required: frontmatter + instructions
 ├── scripts/              # Copies of all relevant scripts
@@ -65,6 +67,19 @@ Copy these scripts into `scripts/`:
   `apk-badging`)
 
 Preserve filenames and executable permissions. Use real copies, not symlinks.
+
+### Transitive Script Dependencies (Required)
+
+If any script you copy invokes other scripts by name (for example, `apk-tiles`
+calling `apk-cat-manifest`), you must also copy those invoked scripts into
+`scripts/` so the skill remains self-contained.
+
+How to detect this:
+
+- Search for direct invocations of other `bin/` scripts (command names like
+  `apk-cat-manifest`, `adb-*`, etc.) in the script body.
+- Do not rely on `require` lines alone; scripts may call other scripts without
+  declaring them via `require`.
 
 ## SKILL.md Requirements
 
@@ -96,20 +111,26 @@ description: [See below]
 Example pattern:
 
 ```yaml
-description:
+description: >
   Manipulates Android devices via ADB with emphasis on Wear OS. Provides scripts
   for screenshots, screen recording, tile management, WearableService
   inspection, package operations, and device configuration. Use when working
-  with adb, Android devices, Wear OS watches, tiles, wearable data layer, or
-  device debugging.
+  with adb, Android devices, Wear OS watches, tiles, wearable data layer,
+  dumpsys, or device debugging.
 ```
+
+For maximum compatibility across skill loaders, prefer a single-line
+`description:` value and avoid YAML block scalars like `description: |` (some
+implementations treat multi-line descriptions inconsistently). If you need line
+wrapping, prefer a folded scalar (`description: >`) rather than a literal block
+(`description: |`).
 
 ### Body Content
 
 Keep the body under 500 lines. Structure it for progressive disclosure—agents
 load this only when the skill activates, so be concise.
 
-**Section 1: Quick Start**
+#### Quick Start
 
 - How to target a device (`ANDROID_SERIAL` for multiple devices)
 - 5-6 highest-value commands to run first:
@@ -120,7 +141,7 @@ load this only when the skill activates, so be concise.
   - `adb-device-properties`
 - Use paths relative to the skill: `scripts/adb-screenshot`
 
-**Section 2: Script Index**
+#### Script Index
 
 A compact reference organized by task category. For each category, list scripts
 with one-line descriptions:
@@ -134,7 +155,7 @@ with one-line descriptions:
 
 Point to `references/command-index.md` for detailed usage.
 
-**Section 3: When Scripts Fail (Raw ADB Fallback)**
+#### Raw ADB Fallback
 
 This is critical. Teach agents how to extract raw ADB commands when scripts
 don't work:
@@ -144,9 +165,9 @@ don't work:
 3. Locate the core `adb` command(s)
 4. Run them manually, adapting as needed
 
-Include 2-3 worked examples:
+Include worked examples:
 
-**Example 1: Tile workflow**
+##### Tile Workflow
 
 ```bash
 # From adb-tile-add:
@@ -162,7 +183,7 @@ adb shell am broadcast \
   --ei index 0
 ```
 
-**Example 2: WearableService dump**
+##### WearableService Dump
 
 ```bash
 # From wearableservice-capabilities:
@@ -170,7 +191,7 @@ adb exec-out dumpsys activity service WearableService | \
   sed -n '/CapabilityService/,/######/p'
 ```
 
-**Example 3: Screenshot with circular mask**
+##### Screenshot With Circular Mask
 
 ```bash
 # From adb-screenshot (for square Wear OS displays):
@@ -181,7 +202,7 @@ adb exec-out "screencap -p" | magick - \
   -compose dstin -composite output.png
 ```
 
-**Section 4: Safety Notes**
+#### Safety Notes
 
 - Debug broadcasts are Wear OS-specific and may not work on all devices
 - Some operations require USB debugging enabled
@@ -190,6 +211,10 @@ adb exec-out "screencap -p" | magick - \
 ## Reference Files
 
 ### references/command-index.md
+
+If this file is longer than 100 lines, include a `## Contents` section at the
+top (a short table of contents) so agents can see the full scope even when
+previewing the file.
 
 For each bundled script, document:
 
@@ -202,6 +227,10 @@ For each bundled script, document:
 Organize by category matching the Script Index in SKILL.md.
 
 ### references/troubleshooting.md
+
+If this file is longer than 100 lines, include a `## Contents` section at the
+top (a short table of contents) so agents can see the full scope even when
+previewing the file.
 
 Cover:
 
@@ -233,6 +262,8 @@ Before finalizing, verify:
 - [ ] Both script-first AND raw-ADB-fallback approaches are documented
 - [ ] `references/command-index.md` documents each script with raw commands
 - [ ] `references/troubleshooting.md` covers common issues
+- [ ] Every file in `scripts/` is documented in `references/command-index.md`
+      and referenced from the `SKILL.md` Script Index (no undocumented scripts)
 - [ ] No extraneous files (README.md, etc.)
 - [ ] Examples use realistic Android component/package names
 
