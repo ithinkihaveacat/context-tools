@@ -19,10 +19,17 @@ provided. It should describe:
 - What the bug is.
 - The observable symptoms (e.g., crash, UI glitch).
 - The context in which it occurs.
+- **Triggering Code:** Include the specific application source code fragment
+  that initiates the failing sequence.
+- **Log Correlation:** Explicitly link the triggering code line to the
+  corresponding timestamped entry in the error log.
 
 **Strict Prohibition on Speculation:**
-- **Do not** use "because" clauses that explain the *why* (e.g., "Crashes because the variable is null").
-- **Do not** reference internal code logic, specific functions, or race conditions.
+
+- **Do not** use "because" clauses that explain the _why_ (e.g., "Crashes
+  because the variable is null").
+- **Do not** reference internal code logic, specific functions, or race
+  conditions.
 - **Do not** propose fixes here.
 
 Save all technical reasoning and root cause analysis for the "Analysis" section.
@@ -31,9 +38,12 @@ Save all technical reasoning and root cause analysis for the "Analysis" section.
 
 Precise versioning allows for accurate reproduction and source code validation.
 
-- **Device:** Device model and API level (e.g., "Pixel Watch 2, API 33" or "Emulator, Wear OS 4").
-- **Build:** App version code, commit hash, or the specific APK artifact name used (e.g., `app-debug.apk`).
-- **Libraries:** Key library versions involved in the bug (e.g., `androidx.glance:glance-wear-tiles:1.0.0-alpha05`).
+- **Device:** Device model and API level (e.g., "Pixel Watch 2, API 33" or
+  "Emulator, Wear OS 4").
+- **Build:** App version code, commit hash, or the specific APK artifact name
+  used (e.g., `app-debug.apk`).
+- **Libraries:** Key library versions involved in the bug (e.g.,
+  `androidx.glance:glance-wear-tiles:1.0.0-alpha05`).
 
 ### Impact
 
@@ -83,6 +93,8 @@ If a full bug report is available (see
 
 > **Log Extraction Command:**
 >
+> <!-- markdownlint-disable MD013 -->
+>
 > ```bash
 > # Extracting the reproduction window from bugreport-20260106.zip
 > LOG_FILE=$(unzip -qql "bugreport-20260106.zip" | cut -c 31- | grep -e dumpstate- -e dumpstate.txt -e bugreport- | grep txt)
@@ -95,6 +107,8 @@ If a full bug report is available (see
 > 01-06 11:13:46.066 10043 32234 32234 E ProtoTilesTileRendererImpl: Failed to render and attach the tile:  com.google.example.wear_widget/.WidgetCatalogService
 > 01-06 11:13:46.066 10043 32234 32234 E ProtoTilesTileRendererImpl: java.lang.RuntimeException: Failed to read the given Remote Compose document: The `224` operation is unknown
 > ```
+>
+> <!-- markdownlint-enable MD013 -->
 
 ### Workaround (If available)
 
@@ -106,7 +120,9 @@ This is the only section where **speculation** and **technical investigation**
 are permitted.
 
 - Hypothesize about root causes (e.g., race conditions, memory leaks).
-- Reference specific source code fragments if useful.
+- **Library Investigation:** Reference specific library source code fragments or
+  internal implementation details that explain _why_ the factual sequence
+  described above led to a failure.
 - Discuss potential fixes or architectural implications.
 
 ## Attachments
@@ -119,7 +135,9 @@ as the bug report document.
 
 - `bugreport.zip` (or similar): The captured Android bug report containing
   system logs.
-- **APK**: The specific build artifact used to reproduce the bug. Explicitly listing the filename (e.g., `app/build/outputs/apk/debug/app-debug.apk`) ensures the exact binary is identified.
+- **APK**: The specific build artifact used to reproduce the bug. Explicitly
+  listing the filename (e.g., `app/build/outputs/apk/debug/app-debug.apk`)
+  ensures the exact binary is identified.
 - **Code Fragments**: If a full APK or bug report isn't available, include
   relevant source code snippets.
 
@@ -202,6 +220,8 @@ Inject a start marker before beginning the reproduction steps.
 **Critical:** Log buffers persist. To avoid confusing this run with previous
 attempts, clear the buffer first or use a unique message.
 
+<!-- markdownlint-disable MD013 -->
+
 ```bash
 # Optional: Clear previous logs
 adb logcat -c
@@ -209,6 +229,8 @@ adb logcat -c
 # Mark start with a unique timestamp to distinguish from prior runs
 adb exec-out log -p f -t "BugReportMarker" "START_REPRO: <Bug Description> $(date +%H%M%S)"
 ```
+
+<!-- markdownlint-enable MD013 -->
 
 #### 2. Reproduce the Defect
 
@@ -279,6 +301,8 @@ Note that file naming conventions for the internal log vary by manufacturer; for
 instance, Samsung devices typically use `dumpstate-*.txt` instead of the
 standard `bugreport-*.txt`.
 
+<!-- markdownlint-disable MD013 -->
+
 ```bash
 # 1. Identify the log file within the ZIP
 LOG_FILE=$(unzip -qql "bugreport.zip" | cut -c 31- | grep -e dumpstate- -e dumpstate.txt -e bugreport- | grep txt)
@@ -287,6 +311,8 @@ LOG_FILE=$(unzip -qql "bugreport.zip" | cut -c 31- | grep -e dumpstate- -e dumps
 # CAUTION: Check timestamps! If previous runs weren't cleared, multiple blocks may appear.
 unzip -p "bugreport.zip" "$LOG_FILE" | perl -ne 'print if /START_REPRO/ .. /END_REPRO/'
 ```
+
+<!-- markdownlint-enable MD013 -->
 
 ### Benefits
 
