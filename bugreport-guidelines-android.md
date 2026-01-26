@@ -28,6 +28,9 @@ provided. It should describe:
 
 - **Do not** use "because" clauses that explain the _why_ (e.g., "Crashes
   because the variable is null").
+- **Do not** interpret the intent or attach qualitative judgment to the behavior
+  (e.g., instead of "This undermines the caching strategy," write "This causes the
+  cache to be bypassed.").
 - **Do not** reference internal code logic, specific functions, or race
   conditions.
 - **Do not** propose fixes here.
