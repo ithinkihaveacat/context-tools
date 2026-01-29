@@ -29,8 +29,8 @@ provided. It should describe:
 - **Do not** use "because" clauses that explain the _why_ (e.g., "Crashes
   because the variable is null").
 - **Do not** interpret the intent or attach qualitative judgment to the behavior
-  (e.g., instead of "This undermines the caching strategy," write "This causes the
-  cache to be bypassed.").
+  (e.g., instead of "This undermines the caching strategy," write "This causes
+  the cache to be bypassed.").
 - **Do not** reference internal code logic, specific functions, or race
   conditions.
 - **Do not** propose fixes here.
@@ -46,7 +46,9 @@ Precise versioning allows for accurate reproduction and source code validation.
 - **Build:** App version code, commit hash, or the specific APK artifact name
   used (e.g., `app-debug.apk`).
 - **Libraries:** Key library versions involved in the bug (e.g.,
-  `androidx.glance:glance-wear-tiles:1.0.0-alpha05`).
+  `androidx.glance:glance-wear-tiles:1.0.0-alpha05`). **Do not use "latest";**
+  provide the exact version, including SNAPSHOT IDs or commit SHAs if running
+  against a dev build.
 
 ### Impact
 
@@ -100,8 +102,7 @@ If a full bug report is available (see
 >
 > ```bash
 > # Extracting the reproduction window from bugreport-20260106.zip
-> LOG_FILE=$(unzip -qql "bugreport-20260106.zip" | cut -c 31- | grep -e dumpstate- -e dumpstate.txt -e bugreport- | grep txt)
-> unzip -p "bugreport-20260106.zip" "$LOG_FILE" | perl -ne 'print if /START_REPRO/ .. /END_REPRO/'
+> unzip -p "bugreport-20260106.zip" $(unzip -qql "bugreport-20260106.zip" | cut -c 31- | grep -e dumpstate- -e dumpstate.txt -e bugreport- | grep txt | head -n 1) | perl -ne 'print if /START_REPRO/ .. /END_REPRO/'
 > ```
 >
 > **Relevant Log Extract:**
@@ -134,10 +135,15 @@ Evidence validates findings. Ideally, a bug report should include the following,
 though availability may vary. These files should be placed in the same directory
 as the bug report document.
 
-### Recommended Files
+### Required Files
 
 - `bugreport.zip` (or similar): The captured Android bug report containing
-  system logs.
+  system logs. Use `adb bugreport` to capture this even if you have analyzed
+  logs via `logcat`, as it contains critical system state (properties, thread
+  dumps, etc.).
+
+### Recommended Files
+
 - **APK**: The specific build artifact used to reproduce the bug. Explicitly
   listing the filename (e.g., `app/build/outputs/apk/debug/app-debug.apk`)
   ensures the exact binary is identified.
@@ -307,12 +313,9 @@ standard `bugreport-*.txt`.
 <!-- markdownlint-disable MD013 -->
 
 ```bash
-# 1. Identify the log file within the ZIP
-LOG_FILE=$(unzip -qql "bugreport.zip" | cut -c 31- | grep -e dumpstate- -e dumpstate.txt -e bugreport- | grep txt)
-
-# 2. Extract and display only the marked "interesting" period.
+# Extract and display only the marked "interesting" period.
 # CAUTION: Check timestamps! If previous runs weren't cleared, multiple blocks may appear.
-unzip -p "bugreport.zip" "$LOG_FILE" | perl -ne 'print if /START_REPRO/ .. /END_REPRO/'
+unzip -p "bugreport.zip" $(unzip -qql "bugreport.zip" | cut -c 31- | grep -e dumpstate- -e dumpstate.txt -e bugreport- | grep txt | head -n 1) | perl -ne 'print if /START_REPRO/ .. /END_REPRO/'
 ```
 
 <!-- markdownlint-enable MD013 -->
