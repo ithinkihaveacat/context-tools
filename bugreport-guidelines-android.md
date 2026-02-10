@@ -21,6 +21,8 @@ provided. It should describe:
 - The context in which it occurs.
 - **Triggering Code:** Include the specific application source code fragment
   that initiates the failing sequence.
+  - If the source is public (e.g., GitHub), include a **persistent link** (using
+    a specific commit hash, not `main` or `master`) to the file and line number.
 - **Log Correlation:** Explicitly link the triggering code line to the
   corresponding timestamped entry in the error log.
 
@@ -149,6 +151,11 @@ as the bug report document.
   ensures the exact binary is identified.
 - **Code Fragments**: If a full APK or bug report isn't available, include
   relevant source code snippets.
+  - **Completeness:** Ensure snippets are copy-pasteable and substantially
+    complete (e.g., include the full function body). Avoid excessive omission
+    (...) that makes the logic hard to follow or requires the reader to guess
+    context. You do not need to include all imports/dependencies unless critical
+    to the bug.
 
 ### Visual Evidence (Recommended for UI/Interaction Bugs)
 
