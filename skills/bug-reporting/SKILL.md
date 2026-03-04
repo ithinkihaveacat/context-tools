@@ -4,6 +4,7 @@ description: >
   Guidelines for reporting Android bugs, validating existing reports, and
   converting unresolved bugs into known issues documentation. Use when filing a
   new bug, reviewing bug reports, or documenting library limitations.
+compatibility: Requires Android SDK (adb), unzip, perl, and standard Unix utilities (grep, cut).
 ---
 
 # Android Bug Reporting Skill

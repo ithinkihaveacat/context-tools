@@ -102,10 +102,10 @@ If a full bug report is available (see
 >
 > <!-- markdownlint-disable MD013 -->
 >
-> ```bash
-> # Extracting the reproduction window from bugreport-20260106.zip
-> unzip -p "bugreport-20260106.zip" $(unzip -qql "bugreport-20260106.zip" | cut -c 31- | grep -e dumpstate- -e dumpstate.txt -e bugreport- | grep txt | head -n 1) | perl -ne 'print if /START_REPRO/ .. /END_REPRO/'
-> ```
+```bash
+# Extracting the reproduction window from bugreport-20260106.zip
+unzip -p "bugreport-20260106.zip" $(unzip -l "bugreport-20260106.zip" | grep -E "bugreport-|dumpstate-" | grep ".txt" | awk '{print $NF}' | head -n 1) | perl -ne 'print if /START_REPRO/ .. /END_REPRO/'
+```
 >
 > **Relevant Log Extract:**
 >
@@ -330,7 +330,7 @@ standard `bugreport-*.txt`.
 ```bash
 # Extract and display only the marked "interesting" period.
 # CAUTION: Check timestamps! If previous runs weren't cleared, multiple blocks may appear.
-unzip -p "bugreport.zip" $(unzip -qql "bugreport.zip" | cut -c 31- | grep -e dumpstate- -e dumpstate.txt -e bugreport- | grep txt | head -n 1) | perl -ne 'print if /START_REPRO/ .. /END_REPRO/'
+unzip -p "bugreport.zip" $(unzip -l "bugreport.zip" | grep -E "bugreport-|dumpstate-" | grep ".txt" | awk '{print $NF}' | head -n 1) | perl -ne 'print if /START_REPRO/ .. /END_REPRO/'
 ```
 
 <!-- markdownlint-enable MD013 -->
