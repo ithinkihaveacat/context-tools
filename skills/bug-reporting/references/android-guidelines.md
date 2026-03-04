@@ -274,26 +274,34 @@ adb bugreport
 ### Capturing Visual Evidence
 
 For UI glitches or complex interaction bugs, logs alone may be insufficient.
-Complement the bug report with a screen recording or screenshot using the
-following scripts (which should be available in your `PATH`):
+Complement the bug report with a screen recording or screenshot.
 
-#### Screen Recording
+You can use any available tool to capture this evidence. Specialized agent
+skills (e.g., `adb` skill) often provide enhanced capture scripts that handle
+device-specifics like Wear OS masking or touch visualization automatically.
 
-Use `adb-screenrecord` to capture recordings. This script handles touch
-visualization automatically and saves the file directly to your host machine.
+#### Basic Method (Standard ADB)
+
+If no specialized tools are available, you can use standard `adb` commands:
+
+**Screen Recording:**
 
 ```bash
-adb-screenrecord repro.mp4
+# Start recording on device (press Ctrl+C to stop)
+adb shell screenrecord /sdcard/repro.mp4
+
+# Pull the file to your host machine
+adb pull /sdcard/repro.mp4
 ```
 
-#### Screenshots
-
-Use `adb-screenshot` for static evidence. It automatically handles
-device-specific requirements, such as applying circular masks for Wear OS
-displays.
+**Screenshots:**
 
 ```bash
-adb-screenshot repro.png
+# Capture screenshot to device storage
+adb shell screencap -p /sdcard/repro.png
+
+# Pull the file to your host machine
+adb pull /sdcard/repro.png
 ```
 
 ### Verifying the Captured Report

@@ -1,12 +1,19 @@
-# Bug Reports vs. Known Issues
+# Converting Bug Reports to Known Issues
 
-Bug reports and known issues often describe the same technical problem, but they
-differ in intent, audience, and framing. This document explains the distinction
-and how to translate between them.
+This guide explains how to translate a **Bug Report** (a request for a fix) into a **Known Issue** (documentation of a limitation).
+
+Use this workflow when a reported bug:
+- Is "working as intended" but confusing.
+- Is a known platform limitation that cannot be fixed.
+- Is too risky or low-priority to fix immediately.
 
 ## Intent and Audience
 
-| Aspect          | Bug Report                         | Known Issue                                        |
+Understanding the shift in perspective is key to writing effective Known Issues.
+
+<!-- markdownlint-disable MD013 -->
+
+| Aspect          | Bug Report (Source)                | Known Issue (Target)                               |
 | --------------- | ---------------------------------- | -------------------------------------------------- |
 | **Intent**      | Request a fix from library authors | Help developers use the library as-is              |
 | **Audience**    | Library maintainers                | Developers using the library                       |
@@ -14,19 +21,17 @@ and how to translate between them.
 | **Perspective** | "This is broken"                   | "This is how it works" (or "This is a limitation") |
 | **Tone**        | Assertive, identifying a defect    | Helpful, facilitating success                      |
 
-## The Lifecycle of a Defect
+<!-- markdownlint-enable MD013 -->
 
-It is helpful to view these documents not just as static categories, but as
-stages in a lifecycle.
+## The Conversion Lifecycle
 
-- **A Bug Report is a Request:** It asks for a change in the code.
-- **A Known Issue is a Response (or Concession):** It acknowledges that the code
-  cannot or will not change right now.
+A **Known Issue** is often the final stage in the lifecycle of a **Bug Report**.
 
-Often, a **Bug Report** is submitted to maintainers. If the maintainers decide
-the fix is too risky, too difficult, or not currently prioritized, they convert
-it into a **Known Issue** for the documentation. Conversely, writing a Known
-Issue implies, "We accept this behavior/limitation for now."
+1.  **Bug Report Submitted:** A user reports a defect.
+2.  **Triage Decision:** Maintainers decide the code will not change (e.g., "WontFix", "Infeasible").
+3.  **Conversion:** The bug report is rewritten as a Known Issue to document the behavior for future users.
+
+Writing a Known Issue implies, "We accept this behavior/limitation for now."
 
 ## Language Differences
 
@@ -69,44 +74,38 @@ _Note: Known issues lead with the solution; bug reports lead with the problem._
 
 ### Example 1: API Consistency (`RemoteBox`)
 
-**As a Bug Report**
+#### As a Bug Report
 
-> **Title:** `RemoteBox` incorrectly uses Arrangement instead of Alignment\
+> **Title:** `RemoteBox` incorrectly uses Arrangement instead of Alignment
 > **Defect:** `RemoteBox` uses `verticalArrangement` for positioning. This is
-> inconsistent with `RemoteRow`, which uses `RemoteAlignment`.\
-> **Expected:** It should use `RemoteAlignment` to match standard semantics.\
-> **Suggested fix:** Change the parameter type in `RemoteBox.kt`.
+> inconsistent with `RemoteRow`, which uses `RemoteAlignment`. **Expected:** It
+> should use `RemoteAlignment` to match standard semantics. **Suggested fix:**
+> Change the parameter type in `RemoteBox.kt`.
 
-**As a Known Issue**
+#### As a Known Issue
 
-> **Title:** `RemoteBox` Vertical Axis Requires `Arrangement`.\
-> **Symptom:** You cannot use `RemoteAlignment` constants when configuring a
-> `RemoteBox`.\
+> **Title:** `RemoteBox` Vertical Axis Requires `Arrangement`. **Symptom:** You
+> cannot use `RemoteAlignment` constants when configuring a `RemoteBox`.
 > **Workaround:** Use `RemoteArrangement` constants (`Top`, `Center`, `Bottom`)
-> instead.\
-> **Context:** This differs from `RemoteRow`, which uses standard Alignment
-> types.
+> instead. **Context:** This differs from `RemoteRow`, which uses standard
+> Alignment types.
 
 ### Example 2: Functional Limitation (Video Uploads)
 
-**As a Bug Report**
+#### As a Bug Report
 
-> **Title:** App crashes with `OutOfMemoryError` on 4k Video Uploads\
-> **Defect:** The upload buffer attempts to load the entire file into RAM before
-> sending.\
+> **Title:** App crashes with `OutOfMemoryError` on 4k Video Uploads **Defect:**
+> The upload buffer attempts to load the entire file into RAM before sending.
 > **Expected:** The client should stream the file in chunks to avoid memory
-> spikes.\
-> **Fix:** Implement `InputStream` handling in the network layer.
+> spikes. **Fix:** Implement `InputStream` handling in the network layer.
 
-**As a Known Issue**
+#### As a Known Issue
 
-> **Title:** Video Upload Size Limits\
-> **Symptom:** Uploading videos larger than 500MB may cause the application to
-> terminate unexpectedly.\
-> **Workaround:** Compress videos before upload, or use the dedicated
-> `ChunkedUpload` helper class for large files.\
-> **Context:** The standard upload helper is optimized for small assets
-> (images/documents).
+> **Title:** Video Upload Size Limits **Symptom:** Uploading videos larger than
+> 500MB may cause the application to terminate unexpectedly. **Workaround:**
+> Compress videos before upload, or use the dedicated `ChunkedUpload` helper
+> class for large files. **Context:** The standard upload helper is optimized
+> for small assets (images/documents).
 
 ## When to Use Each
 
